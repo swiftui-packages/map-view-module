@@ -8,7 +8,7 @@
 import SwiftUI
 import MapKit
 
-#if canImport(MapKit)
+#if canImport(MapKit) && canImport(UIKit)
 public struct MapView: UIViewRepresentable {
 
     @Binding private var region: MKCoordinateRegion
