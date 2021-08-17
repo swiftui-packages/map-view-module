@@ -8,6 +8,7 @@
 import SwiftUI
 import MapKit
 
+#if canImport(MapKit)
 public struct MapView: UIViewRepresentable {
 
     @Binding private var region: MKCoordinateRegion
@@ -636,3 +637,4 @@ public struct MapView_Previews: PreviewProvider {
     }
 
 }
+#endif
