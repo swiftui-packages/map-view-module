@@ -14,7 +14,7 @@ public struct MapView: UIViewRepresentable {
     @Binding private var region: MKCoordinateRegion
     
     private var customMapOverlay: CustomMapOverlay?
-    @State private var presentCustomMapOverlayHash: CustomMapOverlay? = nil
+    @State private var presentCustomMapOverlayHash: CustomMapOverlay?
     
     private var mapType: MKMapType
     
@@ -204,19 +204,19 @@ public struct MapView: UIViewRepresentable {
         
         public func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
             if let userCLLocation = userLocation.location {
-                for i in 0..<self.monitoredRegions.count {
-                    let distance = self.monitoredRegions[i].center.distance(from: userCLLocation)
-                    if self.monitoredRegions[i].isInside && distance > CLLocationDistance(self.monitoredRegions[i].radius) {
+                for index in 0..<self.monitoredRegions.count {
+                    let distance = self.monitoredRegions[index].center.distance(from: userCLLocation)
+                    if self.monitoredRegions[index].isInside && distance > CLLocationDistance(self.monitoredRegions[index].radius) {
                         if let onLeaveMonitoredRegion = self.parent.onLeaveMonitoredRegion {
-                            onLeaveMonitoredRegion(self.monitoredRegions[i].id)
+                            onLeaveMonitoredRegion(self.monitoredRegions[index].id)
                         }
-                        self.monitoredRegions[i].isInside = false
+                        self.monitoredRegions[index].isInside = false
                     }
-                    if !self.monitoredRegions[i].isInside && distance < CLLocationDistance(self.monitoredRegions[i].radius) {
+                    if !self.monitoredRegions[index].isInside && distance < CLLocationDistance(self.monitoredRegions[index].radius) {
                         if let onEnterMonitoredRegion = self.parent.onEnterMonitoredRegion {
-                            onEnterMonitoredRegion(self.monitoredRegions[i].id)
+                            onEnterMonitoredRegion(self.monitoredRegions[index].id)
                         }
-                        self.monitoredRegions[i].isInside = true
+                        self.monitoredRegions[index].isInside = true
                     }
                 }
             }
@@ -233,7 +233,7 @@ public struct MapView: UIViewRepresentable {
         
         public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             
-            if let index = self.overlays.firstIndex(where: { o in o.shape.hash == overlay.hash }) {
+            if let index = self.overlays.firstIndex(where: { overlay_ in overlay_.shape.hash == overlay.hash }) {
                 
                 let unwrappedOverlay = self.overlays[index]
 
@@ -396,8 +396,6 @@ public struct MapView: UIViewRepresentable {
 }
 
 // MARK: End of implementation
-
-
 
 // MARK: Demonstration
 
