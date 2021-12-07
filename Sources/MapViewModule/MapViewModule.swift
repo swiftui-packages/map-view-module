@@ -233,9 +233,9 @@ public struct MapView: UIViewRepresentable {
         }
         
         public func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            
+
             if let index = self.overlays.firstIndex(where: { overlay_ in overlay_.shape.hash == overlay.hash }) {
-                
+
                 let unwrappedOverlay = self.overlays[index]
 
                 if let circleOverlay = unwrappedOverlay.shape as? MKCircle {
@@ -289,21 +289,26 @@ public struct MapView: UIViewRepresentable {
                 return MKTileOverlayRenderer(tileOverlay: tileOverlay)
 
             } else {
-                
+
                 return MKOverlayRenderer()
 
             }
-            
+
         }
-        
+
     }
 
     /// is supposed to be located in the folder with the map name
     public struct DefaultTile: Hashable {
         let tileName: String
         let tileType: String
+
+        public init(tileName: String, tileType: String) {
+            self.tileName = tileName
+            self.tileType = tileType
+        }
     }
-    
+
     public struct CustomMapOverlay: Equatable, Hashable {
         let mapName: String
         let tileType: String
