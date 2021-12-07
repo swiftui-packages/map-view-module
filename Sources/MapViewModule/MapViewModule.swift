@@ -109,7 +109,8 @@ public struct MapView: UIViewRepresentable {
                 let overlay = CustomMapOverlaySource(
                     parent: self,
                     mapName: customMapOverlay.mapName,
-                    tileType: customMapOverlay.tileType
+                    tileType: customMapOverlay.tileType,
+                    defaultTile: customMapOverlay.defaultTile
                 )
                 
                 if let minZ = customMapOverlay.minimumZoomLevel {
@@ -296,6 +297,12 @@ public struct MapView: UIViewRepresentable {
         }
         
     }
+
+    /// is supposed to be located in the folder with the map name
+    public struct DefaultTile: Hashable {
+        let tileName: String
+        let tileType: String
+    }
     
     public struct CustomMapOverlay: Equatable, Hashable {
         let mapName: String
@@ -303,44 +310,62 @@ public struct MapView: UIViewRepresentable {
         var canReplaceMapContent: Bool
         var minimumZoomLevel: Int?
         var maximumZoomLevel: Int?
+        let defaultTile: DefaultTile?
+
         public init(
             mapName: String,
             tileType: String,
             canReplaceMapContent: Bool = true, // false for transparent tiles
             minimumZoomLevel: Int? = nil,
-            maximumZoomLevel: Int? = nil
+            maximumZoomLevel: Int? = nil,
+            defaultTile: DefaultTile? = nil
         ) {
             self.mapName = mapName
             self.tileType = tileType
             self.canReplaceMapContent = canReplaceMapContent
             self.minimumZoomLevel = minimumZoomLevel
             self.maximumZoomLevel = maximumZoomLevel
+            self.defaultTile = defaultTile
         }
     }
-    
+
     public class CustomMapOverlaySource: MKTileOverlay {
-        
+
         // requires folder: tiles/{mapName}/z/y/y,{tileType}
-        
+
         private var parent: MapView
         private let mapName: String
         private let tileType: String
-        
-        public init(parent: MapView, mapName: String, tileType: String) {
+        private let defaultTile: DefaultTile?
+
+        public init(
+            parent: MapView,
+            mapName: String,
+            tileType: String,
+            defaultTile: DefaultTile?
+        ) {
             self.parent = parent
             self.mapName = mapName
             self.tileType = tileType
+            self.defaultTile = defaultTile
             super.init(urlTemplate: "")
         }
-        
+
         public override func url(forTilePath path: MKTileOverlayPath) -> URL {
             if let tileUrl = Bundle.main.url(
                 forResource: "\(path.y)",
-                withExtension: "\(self.tileType)",
+                withExtension: self.tileType,
                 subdirectory: "tiles/\(self.mapName)/\(path.z)/\(path.x)",
                 localization: nil
             ) {
                 return tileUrl
+            } else if let defaultTile = self.defaultTile, let defaultTileUrl = Bundle.main.url(
+                forResource: defaultTile.tileName,
+                withExtension: defaultTile.tileType,
+                subdirectory: "tiles/\(self.mapName)",
+                localization: nil
+            ) {
+                return defaultTileUrl
             } else {
                 return URL(string: "https://tile.openstreetmap.org/\(path.z)/\(path.x)/\(path.y).png")!
                 // Bundle.main.url(forResource: "surrounding", withExtension: "png", subdirectory: "tiles")!
@@ -358,7 +383,7 @@ public struct MapView: UIViewRepresentable {
             lhs.shape.coordinate.longitude == rhs.shape.coordinate.longitude &&
             lhs.fillColor == rhs.fillColor
         }
-        
+
         var shape: MKOverlay
         var fillColor: UIColor?
         var strokeColor: UIColor?
@@ -402,7 +427,7 @@ public struct MapView: UIViewRepresentable {
 public struct MapViewDemo: View {
 
     @State private var locationManager: CLLocationManager
-    
+
     @State private var mapRegion: MKCoordinateRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(
             latitude: 49.293,
@@ -413,42 +438,42 @@ public struct MapViewDemo: View {
             longitudeDelta: 0.01
         )
     )
-    
+
     @State private var customMapOverlay: MapView.CustomMapOverlay?
-    
+
     @State private var mapType: MKMapType = MKMapType.standard
-    
+
     @State private var zoomEnabled: Bool = true
     @State private var showZoomScale: Bool = true
     @State private var useMinZoomBoundary: Bool = false
     @State private var minZoom: Double = 0
     @State private var useMaxZoomBoundary: Bool = false
     @State private var maxZoom: Double = 3000000
-    
+
     @State private var scrollEnabled: Bool = true
     @State private var useScrollBoundaries: Bool = false
     @State private var scrollBoundaries: MKCoordinateRegion = MKCoordinateRegion()
-    
+
     @State private var rotationEnabled: Bool = true
     @State private var showCompassWhenRotated: Bool = true
-    
+
     @State private var showUserLocation: Bool = true
     @State private var userTrackingMode: MKUserTrackingMode = MKUserTrackingMode.none
     @State private var userLocation: CLLocationCoordinate2D?
-    
+
     @State private var showAnnotations: Bool = true
     @State private var annotations: [MKPointAnnotation] = []
-    
+
     @State private var showOverlays: Bool = true
     @State private var overlays: [MapView.Overlay] = []
-    
+
     @State private var showMapCenter: Bool = false
-    
+
     public init() {
         self.locationManager = CLLocationManager()
         self.locationManager.requestWhenInUseAuthorization()
     }
-    
+
     public var body: some View {
 
         NavigationView {
